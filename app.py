@@ -124,5 +124,5 @@ for key, title in [
     st.pyplot(create_fig(key, title, today))
 
 st.markdown(
-    f"Date de mise à jour : {today}, source : [DREES]({url2}), code : [GitHub](https://github.com/vivien000)"
+    f"Date de mise à jour : {today}, source : [DREES]({url2}), code : [GitHub](https://github.com/vivien000/vaccine-stats)"
 )
