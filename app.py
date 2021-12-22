@@ -98,7 +98,7 @@ st.sidebar.header("COVID-19 : cas graves en fonction de l'âge et du statut vacc
 
 st.sidebar.markdown(
     f"""
-Les 3 graphiques de cette page montrent les nombres, par millions de personnes, des :
+Les 3 graphiques de cette page montrent les nombres, par million de personnes, des :
 
 - **hospitalisations**
 - entrées en **soins critiques**
