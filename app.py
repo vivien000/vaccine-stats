@@ -140,23 +140,20 @@ st.markdown(
 À partir des données précédentes et connaissant l'effectif de chaque classe d'âge, il est possible de comparer la situation réellement observée et une situation hypothétique où chaque personne aurait les mêmes risques que les personnes non vaccinées de sa catégorie d'âge. **Le nombre de cas dans cette situation hypothétique est toutefois sous-estimé car il ne tient pas compte de l'effet de la couverture vaccinale sur la transmission**.
 
 <style type="text/css">
-table {{margin: auto, margin-bottom: 20px}}
-.tg td, .tg th {{border-color:white;border-style:solid;border-width:6px; width: 33.3%;text-align:center;vertical-align:middle}}
+table {{margin: auto}}
+td {{width: 33.3%;text-align:center;vertical-align:middle}}
 .bold {{font-weight: bold}}
-.background-color {{background-color: #f0f2f6}}
 </style>
-<table class="tg">
-<thead>
-  <tr>
-    <th></th>
-    <th colspan="2">Nombre de cas quotidiens avec test PCR positif<br>(période du {earliest} au {latest}, 20 ans ou plus)</th>
-  </tr>
-</thead>
+<table>
 <tbody>
-  <tr>
-    <td></td>
-    <td class="bold">Situation observée<br></td>
-    <td class="bold">Situation hypothétique sans vaccins</td>
+  <tr style="border: none">
+    <td style="border: none"></td>
+    <td colspan="2"><b>Nombre de cas quotidiens avec test PCR positif</b><br>(période du {earliest} au {latest}, 20 ans ou plus)</td>
+  </tr>
+  <tr style="border: none" class="bold">
+    <td style="border: none"></td>
+    <td>Situation observée<br></td>
+    <td>Situation hypothétique sans vaccins</td>
   </tr>
   <tr class="background-color">
     <td class="bold">Hospitalisations</td>
