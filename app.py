@@ -32,7 +32,7 @@ def transform_age(s):
     }[s]
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_and_preprocess_data(today):
     urlretrieve(url, filename="data.csv")
     df = pd.read_csv("data.csv", sep=";")
@@ -40,7 +40,7 @@ def get_and_preprocess_data(today):
     # Remove the 0-19 age range
     df = df[df["age"] != "[0,19]"]
 
-    # Keep only the 15 last days available
+    # Keep only the last 15 days available
     dates_kept = sorted(list(set(df["date"])))[-15:]
     df = df[df["date"].isin(dates_kept)]
 
@@ -48,13 +48,8 @@ def get_and_preprocess_data(today):
     df["vac_statut"] = df["vac_statut"].map(transform_status)
     df["age"] = df["age"].map(transform_age)
 
-    # Agregate the data across all dates
-    agg_dict = {
-        col: "sum"
-        for col in list(df.columns)
-        if "hc" in col or "nb" in col or "sc" in col or "dc" in col
-    }
-    agg_dict["effectif"] = "mean"
+    # Aggregate the data across all dates
+    agg_dict = {"hc_pcr": "sum", "sc_pcr": "sum", "dc_pcr": "sum", "effectif": "mean"}
     df = (
         df.groupby(by=["age", "vac_statut", "date"])
         .sum()
@@ -63,10 +58,9 @@ def get_and_preprocess_data(today):
     )
 
     # Compute the relative numbers of hospital admissions, ICU admissions and deaths
-    df = df.loc[:, ["hc_pcr", "sc_pcr", "dc_pcr", "effectif"]]
     df["hc_pcr_per_1M"] = df.apply(lambda x: 1e6 * x.hc_pcr / x.effectif, axis=1)
     df["sc_pcr_per_1M"] = df.apply(lambda x: 1e6 * x.sc_pcr / x.effectif, axis=1)
-    df["dc_pcr_per_1M"] = df.apply(lambda x: x.dc_pcr / x.effectif, axis=1)
+    df["dc_pcr_per_1M"] = df.apply(lambda x: 1e6 * x.dc_pcr / x.effectif, axis=1)
     df = df.reset_index(level=["age", "vac_statut"]).rename(columns={"age": "Âge"})
     return df, dates_kept
 
@@ -79,7 +73,7 @@ earliest = f"{earliest[-2:]}/{earliest[5:7]}"
 latest = f"{latest[-2:]}/{latest[5:7]}"
 
 
-@st.cache(hash_funcs={matplotlib.figure.Figure: hash})
+@st.cache(hash_funcs={matplotlib.figure.Figure: hash}, show_spinner=False)
 def create_fig(key, title, today):
     sns.set_context("paper")
     fig, ax = plt.subplots(figsize=(8, 4))
