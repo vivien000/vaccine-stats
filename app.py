@@ -1,5 +1,6 @@
 import datetime
 import streamlit as st
+import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
@@ -104,7 +105,7 @@ Les 3 graphiques de cette page montrent les nombres, par million de personnes, d
 - entrées en **soins critiques**
 - **décès**
 
-... au cours des 15 derniers jours pour lesquels les données nationales sont disponibles ({earliest}-{latest}) et en fonction de l'**âge** et du **statut vaccinal**.
+... **au cours des 15 derniers jours** pour lesquels les données nationales sont disponibles ({earliest}-{latest}) et en fonction de l'**âge** et du **statut vaccinal**.
 
 Ces graphiques sont mis à jour quotidiennement à partir des données de la [DREES]({url2}).
 """
@@ -117,6 +118,67 @@ for key, title in [
 ]:
     st.pyplot(create_fig(key, title, today))
 
+sum_by_vac_status = df.groupby(by=["Âge"]).sum()[
+    ["effectif", "hc_pcr", "sc_pcr", "dc_pcr"]
+]
+age_range_sizes = sum_by_vac_status["effectif"]
+observed = sum_by_vac_status.sum()[["hc_pcr", "sc_pcr", "dc_pcr"]]
+non_vac_rates = (
+    df[df["vac_statut"] == "[0]. Non vaccinés"]
+    .groupby(by=["Âge"])
+    .sum()[["hc_pcr_per_1M", "sc_pcr_per_1M", "dc_pcr_per_1M"]]
+)
+
+counterfactual = {
+    "hc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["hc_pcr_per_1M"]) / 1e6,
+    "sc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["sc_pcr_per_1M"]) / 1e6,
+    "dc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["dc_pcr_per_1M"]) / 1e6,
+}
+
 st.markdown(
-    f"Date de mise à jour : {today}, source : [DREES]({url2}), code : [GitHub](https://github.com/vivien000/vaccine-stats)"
+    f"""
+À partir des données précédentes et connaissant l'effectif de chaque classe d'âge, il est possible de comparer la situation réellement observée et une situation hypothétique où chaque personne aurait les mêmes risques que les personnes non vaccinées de sa catégorie d'âge. **Le nombre de cas dans cette situation hypothétique est toutefois sous-estimé car il ne tient pas compte de l'effet de la couverture vaccinale sur la transmission**.
+
+<style type="text/css">
+table {{margin: auto, margin-bottom: 20px}}
+.tg td, .tg th {{border-color:white;border-style:solid;border-width:6px; width: 33.3%;text-align:center;vertical-align:middle}}
+.bold {{font-weight: bold}}
+.background-color {{background-color: #f0f2f6}}
+</style>
+<table class="tg">
+<thead>
+  <tr>
+    <th></th>
+    <th colspan="2">Nombre de cas quotidiens avec test PCR positif<br>(période du {earliest} au {latest}, 20 ans ou plus)</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td></td>
+    <td class="bold">Situation observée<br></td>
+    <td class="bold">Situation hypothétique sans vaccins</td>
+  </tr>
+  <tr class="background-color">
+    <td class="bold">Hospitalisations</td>
+    <td>{int(observed['hc_pcr']/15)}</td>
+    <td>{int(counterfactual['hc_pcr']/15)}</td>
+  </tr>
+  <tr>
+    <td class="bold">Entrées en soins critiques</td>
+    <td>{int(observed['sc_pcr']/15)}</td>
+    <td>{int(counterfactual['sc_pcr']/15)}</td>
+  </tr>
+  <tr class="background-color">
+    <td class="bold">Décès</td>
+    <td>{int(observed['dc_pcr']/15)}</td>
+    <td>{int(counterfactual['dc_pcr']/15)}</td>
+  </tr>
+</tbody>
+</table>
+<br>
+
+Date de mise à jour : {today}, source : [DREES]({url2}), code : [GitHub](https://github.com/vivien000/vaccine-stats)
+
+""",
+    unsafe_allow_html=True,
 )
