@@ -112,28 +112,48 @@ Ces graphiques sont mis à jour quotidiennement à partir des données de la [DR
 )
 
 for key, title in [
-    ("hc_pcr_per_1M", "Hospitalisations avec test PCR positif"),
-    ("sc_pcr_per_1M", "Entrées en soins critiques avec test PCR positif"),
-    ("dc_pcr_per_1M", "Décès avec test PCR positif"),
+    (
+        "hc_pcr_per_1M",
+        r"$\bf{Hospitalisations}$"
+        + f" avec test PCR positif du {earliest} au {latest}",
+    ),
+    (
+        "sc_pcr_per_1M",
+        r"$\bf{Entrées\ en\ soins\ critiques}$"
+        + f" avec test PCR positif du {earliest} au {latest}",
+    ),
+    (
+        "dc_pcr_per_1M",
+        r"$\bf{Décès}$" + f" avec test PCR positif du {earliest} au {latest}",
+    ),
 ]:
     st.pyplot(create_fig(key, title, today))
 
-sum_by_vac_status = df.groupby(by=["Âge"]).sum()[
-    ["effectif", "hc_pcr", "sc_pcr", "dc_pcr"]
-]
-age_range_sizes = sum_by_vac_status["effectif"]
-observed = sum_by_vac_status.sum()[["hc_pcr", "sc_pcr", "dc_pcr"]]
-non_vac_rates = (
-    df[df["vac_statut"] == "[0]. Non vaccinés"]
-    .groupby(by=["Âge"])
-    .sum()[["hc_pcr_per_1M", "sc_pcr_per_1M", "dc_pcr_per_1M"]]
-)
 
-counterfactual = {
-    "hc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["hc_pcr_per_1M"]) / 1e6,
-    "sc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["sc_pcr_per_1M"]) / 1e6,
-    "dc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["dc_pcr_per_1M"]) / 1e6,
-}
+@st.cache(show_spinner=False)
+def compute_daily_cases(today):
+    sum_by_vac_status = df.groupby(by=["Âge"]).sum()[
+        ["effectif", "hc_pcr", "sc_pcr", "dc_pcr"]
+    ]
+    age_range_sizes = sum_by_vac_status["effectif"]
+    observed = sum_by_vac_status.sum()[["hc_pcr", "sc_pcr", "dc_pcr"]]
+    non_vac_rates = (
+        df[df["vac_statut"] == "[0]. Non vaccinés"]
+        .groupby(by=["Âge"])
+        .sum()[["hc_pcr_per_1M", "sc_pcr_per_1M", "dc_pcr_per_1M"]]
+    )
+    counterfactual = {
+        "hc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["hc_pcr_per_1M"])
+        / 1e6,
+        "sc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["sc_pcr_per_1M"])
+        / 1e6,
+        "dc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["dc_pcr_per_1M"])
+        / 1e6,
+    }
+    return observed, counterfactual
+
+
+observed, counterfactual = compute_daily_cases(today)
 
 st.markdown(
     f"""
