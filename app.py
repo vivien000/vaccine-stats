@@ -36,7 +36,7 @@ def transform_age(s):
 @st.cache(show_spinner=False)
 def get_and_preprocess_data(today):
     urlretrieve(url, filename="data.csv")
-    df = pd.read_csv("data.csv", sep=";")
+    df = pd.read_csv("data.csv", sep=";", on_bad_lines="skip")
 
     # Remove the 0-19 age range
     df = df[df["age"] != "[0,19]"]
@@ -74,7 +74,7 @@ earliest = f"{earliest[-2:]}/{earliest[5:7]}"
 latest = f"{latest[-2:]}/{latest[5:7]}"
 
 
-@st.cache(hash_funcs={matplotlib.figure.Figure: hash}, show_spinner=False)
+#@st.cache(hash_funcs={matplotlib.figure.Figure: hash}, show_spinner=False)
 def create_fig(key, title, today):
     sns.set_context("paper")
     fig, ax = plt.subplots(figsize=(8, 4))
