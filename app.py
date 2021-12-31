@@ -222,7 +222,7 @@ st.markdown(
     """
     <style>
         div.stSelectbox{
-            width: 15% !important;
+            width: 80px !important;
         }
         .element-container {
             display: flex;
