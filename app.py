@@ -225,6 +225,7 @@ st.markdown(
             width: 15% !important;
         }
         .element-container {
+            display: flex;
             justify-content: flex-end;
             flex-direction: row;
         }
