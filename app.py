@@ -159,30 +159,30 @@ The charts are updated daily with [DREES]({url2}) data.
 
 titles = {
     0: {
-        "fr": r"$\bf{Tests\ PCR\ positifs}$" + f" du {earliest} au {latest}",
-        "en": r"$\bf{Positive\ PCR\ tests}$" + f" from {earliest} until {latest}",
+        "fr": "$\\bf{Tests\ PCR\ positifs}$" + f" du {earliest} au {latest}",
+        "en": "$\\bf{Positive\ PCR\ tests}$" + f" from {earliest} until {latest}",
     },
     1: {
-        "fr": r"$\bf{Tests\ PCR\ positifs}$"
+        "fr": "$\\bf{Tests\ PCR\ positifs}$"
         + f" de personnes symptomatiques du {earliest} au {latest}",
-        "en": r"$\bf{Positive\ PCR\ tests}$"
+        "en": "$\\bf{Positive\ PCR\ tests}$"
         + f" of symptomatic persons from {earliest} until {latest}",
     },
     2: {
-        "fr": r"$\bf{Hospitalisations}$"
+        "fr": "$\\bf{Hospitalisations}$"
         + f" avec test PCR positif du {earliest} au {latest}",
-        "en": r"$\bf{Hospital\ admissions}$"
+        "en": "$\\bf{Hospital\ admissions}$"
         + f" with positive PCR test from {earliest} until {latest}",
     },
     3: {
-        "fr": r"$\bf{Entrées\ en\ soins\ critiques}$"
+        "fr": "$\\bf{Entrées\ en\ soins\ critiques}$"
         + f" avec test PCR positif du {earliest} au {latest}",
-        "en": r"$\bf{ICU\ admissions}$"
+        "en": "$\\bf{ICU\ admissions}$"
         + f" with positive PCR test from {earliest} until {latest}",
     },
     4: {
-        "fr": r"$\bf{Décès}$" + f" avec test PCR positif du {earliest} au {latest}",
-        "en": r"$\bf{Deaths}$"
+        "fr": "$\\bf{Décès}$" + f" avec test PCR positif du {earliest} au {latest}",
+        "en": "$\\bf{Deaths}$"
         + f" with positive PCR test from {earliest} until {latest}",
     },
 }
