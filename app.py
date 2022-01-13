@@ -95,7 +95,14 @@ def preprocess_data(today, df_initial, lang):
     df["age"] = df["age"].map(lambda s: transform_age(s, lang))
 
     # Aggregate the data across all dates
-    agg_dict = {"hc_pcr": "sum", "sc_pcr": "sum", "dc_pcr": "sum", "effectif": "mean"}
+    agg_dict = {
+        "nb_pcr_sympt0": "sum",
+        "nb_pcr0": "sum",
+        "hc_pcr": "sum",
+        "sc_pcr": "sum",
+        "dc_pcr": "sum",
+        "effectif": "mean",
+    }
     df = (
         df.groupby(by=["age", "vac_statut", "date"])
         .sum()
@@ -105,6 +112,10 @@ def preprocess_data(today, df_initial, lang):
     df = df.reset_index(level=["age", "vac_statut"])
 
     # Compute the relative numbers of hospital admissions, ICU admissions and deaths
+    df["sympt_pcr_per_1M"] = df.apply(
+        lambda x: 1e6 * x.nb_pcr_sympt0 / x.effectif, axis=1
+    )
+    df["pcr_per_1M"] = df.apply(lambda x: 1e6 * x.nb_pcr0 / x.effectif, axis=1)
     df["hc_pcr_per_1M"] = df.apply(lambda x: 1e6 * x.hc_pcr / x.effectif, axis=1)
     df["sc_pcr_per_1M"] = df.apply(lambda x: 1e6 * x.sc_pcr / x.effectif, axis=1)
     df["dc_pcr_per_1M"] = df.apply(lambda x: 1e6 * x.dc_pcr / x.effectif, axis=1)
@@ -115,14 +126,15 @@ def preprocess_data(today, df_initial, lang):
 df = preprocess_data(today, df_initial, lang)
 
 sidebar_title = {
-    "fr": "COVID-19 : cas graves en fonction de l'âge et du statut vaccinal en France",
-    "en": "COVID-19: severe cases by age and vaccine status in France",
+    "fr": "COVID-19 : cas avec test PCR positif en fonction de l'âge et du statut vaccinal en France",
+    "en": "COVID-19: cases with positive PCR test by age and vaccine status in France",
 }
 
 sidebar_text = {
     "fr": f"""
-Les 3 graphiques de cette page montrent les nombres, par million de personnes, des :
-
+Les graphiques de cette page montrent les nombres, par million de personnes, des :
+- **tests PCR positifs**
+- **tests PCR positifs** de personnes symptomatiques
 - **hospitalisations**
 - entrées en **soins critiques**
 - **décès**
@@ -132,8 +144,9 @@ Les 3 graphiques de cette page montrent les nombres, par million de personnes, d
 Ces graphiques sont mis à jour quotidiennement à partir des données de la [DREES]({url2}).
 """,
     "en": f"""
-The 3 charts on this page show the relative numbers (per million of people, by **age** and **vaccine status**) of:
-
+The charts on this page show the relative numbers (per million of people, by **age** and **vaccine status**) of:
+- **positive PCR tests**
+- **positives PCR tests** of symptomatic people
 - **hospital admissions**
 - **ICU admissions**
 - **deaths**
@@ -146,18 +159,28 @@ The charts are updated daily with [DREES]({url2}) data.
 
 titles = {
     0: {
+        "fr": r"$\bf{Tests\ PCR\ positifs}$" + f" du {earliest} au {latest}",
+        "en": r"$\bf{Positive\ PCR\ tests}$" + f" from {earliest} until {latest}",
+    },
+    1: {
+        "fr": r"$\bf{Tests\ PCR\ positifs}$"
+        + f" de personnes symptomatiques du {earliest} au {latest}",
+        "en": r"$\bf{Positive\ PCR\ tests}$"
+        + f" of symptomatic persons from {earliest} until {latest}",
+    },
+    2: {
         "fr": r"$\bf{Hospitalisations}$"
         + f" avec test PCR positif du {earliest} au {latest}",
         "en": r"$\bf{Hospital\ admissions}$"
         + f" with positive PCR test from {earliest} until {latest}",
     },
-    1: {
+    3: {
         "fr": r"$\bf{Entrées\ en\ soins\ critiques}$"
         + f" avec test PCR positif du {earliest} au {latest}",
         "en": r"$\bf{ICU\ admissions}$"
         + f" with positive PCR test from {earliest} until {latest}",
     },
-    2: {
+    4: {
         "fr": r"$\bf{Décès}$" + f" avec test PCR positif du {earliest} au {latest}",
         "en": r"$\bf{Deaths}$"
         + f" with positive PCR test from {earliest} until {latest}",
@@ -178,9 +201,11 @@ table_columns = {
 }
 
 table_rows = {
-    0: {"fr": "Hospitalisations", "en": "Hospital admissions"},
-    1: {"fr": "Entrées en soins critiques", "en": "ICU admissions"},
-    2: {"fr": "Décès", "en": "Deaths"},
+    0: {"fr": "Infections", "en": "Infections"},
+    1: {"fr": "Infections symptomatiques", "en": "Symptomatic infections"},
+    2: {"fr": "Hospitalisations", "en": "Hospital admissions"},
+    3: {"fr": "Entrées en soins critiques", "en": "ICU admissions"},
+    4: {"fr": "Décès", "en": "Deaths"},
 }
 
 table_text = {
@@ -234,9 +259,11 @@ st.markdown(
 )
 
 for key, title in [
-    ("hc_pcr_per_1M", titles[0][lang]),
-    ("sc_pcr_per_1M", titles[1][lang]),
-    ("dc_pcr_per_1M", titles[2][lang]),
+    ("pcr_per_1M", titles[0][lang]),
+    ("sympt_pcr_per_1M", titles[1][lang]),
+    ("hc_pcr_per_1M", titles[2][lang]),
+    ("sc_pcr_per_1M", titles[3][lang]),
+    ("dc_pcr_per_1M", titles[4][lang]),
 ]:
     st.pyplot(create_fig(key, title, lang, today))
 
@@ -244,16 +271,31 @@ for key, title in [
 @st.cache(show_spinner=False)
 def compute_daily_cases(today):
     sum_by_vac_status = df.groupby(by=["age"]).sum()[
-        ["effectif", "hc_pcr", "sc_pcr", "dc_pcr"]
+        ["effectif", "nb_pcr0", "nb_pcr_sympt0", "hc_pcr", "sc_pcr", "dc_pcr"]
     ]
     age_range_sizes = sum_by_vac_status["effectif"]
-    observed = sum_by_vac_status.sum()[["hc_pcr", "sc_pcr", "dc_pcr"]]
+    observed = sum_by_vac_status.sum()[
+        ["nb_pcr0", "nb_pcr_sympt0", "hc_pcr", "sc_pcr", "dc_pcr"]
+    ]
     non_vac_rates = (
         df[df["vac_statut"].map(lambda s: s[1]) == "0"]
         .groupby(by=["age"])
-        .sum()[["hc_pcr_per_1M", "sc_pcr_per_1M", "dc_pcr_per_1M"]]
+        .sum()[
+            [
+                "pcr_per_1M",
+                "sympt_pcr_per_1M",
+                "hc_pcr_per_1M",
+                "sc_pcr_per_1M",
+                "dc_pcr_per_1M",
+            ]
+        ]
     )
     counterfactual = {
+        "pcr": np.dot(np.array(age_range_sizes), non_vac_rates["pcr_per_1M"]) / 1e6,
+        "sympt_pcr": np.dot(
+            np.array(age_range_sizes), non_vac_rates["sympt_pcr_per_1M"]
+        )
+        / 1e6,
         "hc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["hc_pcr_per_1M"])
         / 1e6,
         "sc_pcr": np.dot(np.array(age_range_sizes), non_vac_rates["sc_pcr_per_1M"])
@@ -286,18 +328,28 @@ td {{width: 33.3%;text-align:center;vertical-align:middle}}
     <td>{table_columns[0][lang]}</td>
     <td>{table_columns[1][lang]}</td>
   </tr>
-  <tr class="background-color">
+  <tr>
     <td class="bold">{table_rows[0][lang]}</td>
+    <td>{int(observed['nb_pcr0']/15)}</td>
+    <td>{int(counterfactual['pcr']/15)}</td>
+  </tr>
+  <tr>
+    <td class="bold">{table_rows[1][lang]}</td>
+    <td>{int(observed['nb_pcr_sympt0']/15)}</td>
+    <td>{int(counterfactual['sympt_pcr']/15)}</td>
+  </tr>
+  <tr>
+    <td class="bold">{table_rows[2][lang]}</td>
     <td>{int(observed['hc_pcr']/15)}</td>
     <td>{int(counterfactual['hc_pcr']/15)}</td>
   </tr>
   <tr>
-    <td class="bold">{table_rows[1][lang]}</td>
+    <td class="bold">{table_rows[3][lang]}</td>
     <td>{int(observed['sc_pcr']/15)}</td>
     <td>{int(counterfactual['sc_pcr']/15)}</td>
   </tr>
-  <tr class="background-color">
-    <td class="bold">{table_rows[2][lang]}</td>
+  <tr>
+    <td class="bold">{table_rows[4][lang]}</td>
     <td>{int(observed['dc_pcr']/15)}</td>
     <td>{int(counterfactual['dc_pcr']/15)}</td>
   </tr>
