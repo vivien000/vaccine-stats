@@ -224,11 +224,11 @@ def create_fig(key, title, lang, today):
     sns.set_context("paper")
     fig, ax = plt.subplots(figsize=(8, 4))
     sns.barplot(
-        data=df,
+        data=df[df["vac_statut"].map(lambda s: s[1] not in ["1", "2"])],
         x="age",
         y=key,
         hue="vac_statut",
-        palette=sns.color_palette("rocket"),
+        palette=sns.color_palette("rocket", 3),
         ax=ax,
     )
     sns.despine()
