@@ -66,7 +66,7 @@ def transform_age(s, lang):
     return d[s]
 
 
-@st.cache(show_spinner=False)
+@st.experimental_memo(show_spinner=False)
 def get_data(today):
     urlretrieve(url, filename="data.csv")
     df = pd.read_csv("data.csv", sep=";", on_bad_lines="skip")
