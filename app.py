@@ -33,7 +33,7 @@ def transform_status(s, lang):
             return "[2]. Première dose (> 14 jours)"
         if "Complet" in s and "sans rappel" in s:
             return "[3]. Schéma vaccinal complet sans rappel"
-        if "Complet" in s and "avec rappel" in s:
+        if "Complet" in s and "avec" in s:
             return "[4]. Schéma vaccinal complet avec rappel"
     else:
         if "Non-vaccinés" in s:
@@ -44,7 +44,7 @@ def transform_status(s, lang):
             return "[2]. First dose (> 14 jours)"
         if "Complet" in s and "sans rappel" in s:
             return "[3]. Fully vaccinated (without booster)"
-        if "Complet" in s and "avec rappel" in s:
+        if "Complet" in s and "avec" in s:
             return "[4]. Fully vaccinated (with booster)"
 
 
